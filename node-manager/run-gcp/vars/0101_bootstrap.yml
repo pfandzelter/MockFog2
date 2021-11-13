@@ -1,9 +1,9 @@
 ---
-project: mockfog2
+project: fogdatabench21
 region: europe-west1
 zone: europe-west1-c
 agent_port: 3100
-gcp_cred_file: /workspace/MockFog2/gcp_account.json
+gcp_cred_file: /home/stefania/Documents/TUB/ADSP/MockFog2/node-manager/fogdatabench21_cred.json
 image: projects/debian-cloud/global/images/family/debian-9
 
 application_instruction_and_states_ports:

@@ -1,7 +1,9 @@
 .DS_Store
 node-manager/run/
 node-manager/node_modules/*
+node-manager/package-lock.json
 node-agent/node_modules/*
 node-agent/tmptcconfig.json
+node-agent/package-lock.json
 *.log
 ~$Figures.pptx

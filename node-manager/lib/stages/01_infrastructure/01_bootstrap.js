@@ -18,8 +18,8 @@ class Child extends Phase {
     constructor(phaseName) {
         super(phaseName)
 
-        this.varPath = conf.runPlaybookVarDir + "0101_bootstrap.yml"
-        this.playbookPath = conf.playbookDir + "0101_bootstrap.yml"
+        this.varPath = conf.runPlaybookVarDir + "0101_bootstrap_gcp.yml"
+        this.playbookPath = conf.playbookDir + "0101_bootstrap_gcp.yml"
         this.playbookLogPath = conf.runLogDir + "0101_bootstrap-playlog.log"
         this.hostsPath = conf.runDir + "hosts"
     }
@@ -33,11 +33,12 @@ class Child extends Phase {
 
     async runPrePlaybookTasks() {
         // write var file
-        await fsp.writeFile(this.varPath, this.infra.awsYML + this.orchestration.applicationInstructionsAndStatesPortsYml + this.infra.machinesYML)
+        await fsp.writeFile(this.varPath, this.infra.gcloudYML + this.orchestration.applicationInstructionsAndStatesPortsYml + this.infra.machinesYML)
         this.logger.info("Bootstrap playbook vars written to " + this.varPath)
 
         // create playbook object
         this.playbook = new common.Playbook(this.playbookPath, this.varPath)
+        console.log("Execute playbook " + this.playbookPath)
     }
 
     async runPostPlaybookTasks(actionFunction) {

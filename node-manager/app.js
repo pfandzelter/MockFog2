@@ -41,6 +41,7 @@ var myArgs = process.argv.slice(2);
 
 if (myArgs[0] in phases) {
     var Phase = phases[myArgs[0]]
+    logger.info("Strating stage " + myArgs[0])
 } else {
     logger.info("Please tell me what to do...")
     process.exit(1)

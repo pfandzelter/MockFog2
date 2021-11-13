@@ -84,11 +84,25 @@ agent_port: ${aws.agent_port}
 }
 
 /**
+ * TODO: Transforms and returns the given gcloud json to yml.
+ * 
+ * @param {Object} gcloud the infrastructure json aws object
+ */
+ function getGcloudYml(gcloud) {
+    return `---
+project: ${gcloud.project}
+region: ${gcloud.region}
+gcp_cred_file: ${gcloud.gcp_cred_file}
+agent_port: ${gcloud.agent_port}
+\n`
+}
+
+/**
  * Transforms and returns the given machines json to yml.
  * 
  * @param {Object} machines the infrastructure json machines object
  */
-function getMachinesYml(machines) {
+function getMachinesYml(machines, gcloud) {
     let ymlString = "machines:"
 
     machines.forEach(machine => {
@@ -96,6 +110,25 @@ function getMachinesYml(machines) {
 - machine_name: ${machine.machine_name}
   type: ${machine.type}
   image: ${machine.image}`
+    });
+
+    return ymlString + "\n"
+}
+
+/**
+ * Transforms and returns the given machines json to yml.
+ * 
+ * @param {Object} machines the infrastructure json machines object
+ * @param {Object} gcloud the infrastructure json gcloud object
+ */
+ function getMachinesGcloudYml(machines, gcloud) {
+    let ymlString = "machines:"
+
+    machines.forEach(machine => {
+        ymlString = ymlString + `
+- machine_name: ${machine.machine_name}
+  type: ${machine.type}
+  image: ${gcloud.image}`
     });
 
     return ymlString + "\n"
@@ -262,6 +295,8 @@ module.exports = function(fileLocation) {
     }
 
     const infraJson = fs.readFileSync(fileLocation, "utf-8")
+    console.log(infraJson)
+
     const stripped = stripJson(infraJson)
     try {
         var infra = JSON.parse(stripped)
@@ -271,11 +306,17 @@ module.exports = function(fileLocation) {
         process.exit(1)
     }
 
+    console.log(getGcloudYml(infra.gcp))
+    console.log(getMachinesGcloudYml(infra.machines, infra.gcp))
+
     return {
         infra: infra,
         graph: getGraph(infra),
-        awsYML: getAWSYml(infra.aws),
-        machinesYML: getMachinesYml(infra.machines),
+        // TODO: convert gcloud infra to Yml
+        // awsYML: getAWSYml(infra.aws),
+        // machinesYML: getMachinesYml(infra.machines),
+        gcloudYML: getGcloudYml(infra.gcp),
+        machinesYML: getMachinesGcloudYml(infra.machines, infra.gcp),
         getGraph: getGraph,
         _getOneHopEdges: getOneHopEdges,
         calculatePathRate: function(path, withUnit) {
