@@ -12,19 +12,19 @@
         auth_kind: serviceaccount
         service_account_file: "{{ gcp_cred_file }}"
         state: present
-      register: mf2-network-management
+      register: mf2_network_management
 
     - name: Create Management Subnet
       google.cloud.gcp_compute_subnetwork:
         name: mf2-subnet-management
         region: "{{ region }}"
-        network: "{{ mf2-network-management }}"
+        network: "{{ mf2_network_management }}"
         ip_cidr_range: 10.0.1.0/24
         project: "{{ project }}"
         auth_kind: serviceaccount
         service_account_file: "{{ gcp_cred_file }}"
         state: present
-      register: mf2-subnet-management
+      register: mf2_subnet_management
 
     - name: Create Management Firewall
       google.cloud.gcp_compute_firewall:
@@ -51,19 +51,19 @@
         auth_kind: serviceaccount
         service_account_file: "{{ gcp_cred_file }}"
         state: present
-      register: mf2-network-internal
+      register: mf2_network_internal
 
     - name: Create Internal Subnet
       google.cloud.gcp_compute_subnetwork:
         name: mf2-subnet-internal
         region: "{{ region }}"
-        network: "{{ mf2-network-internal }}"
+        network: "{{ mf2_network_internal }}"
         ip_cidr_range: 10.0.2.0/24
         project: "{{ project }}"
         auth_kind: serviceaccount
         service_account_file: "{{ gcp_cred_file }}"
         state: present
-      register: mf2-subnet-internal
+      register: mf2_subnet_internal
 
     - name: Create Internal Firewall
       google.cloud.gcp_compute_firewall:
@@ -90,16 +90,16 @@
         labels:
           environment: mf2
         network_interfaces:
-        - network: "{{ mf2-network-management }}"
+        - network: "{{ mf2_network_management }}"
           access_configs:
           - name: External NAT
             type: ONE_TO_ONE_NAT
-          subnetwork: "{{ mf2-subnet-management }}"
-        - network: "{{ mf2-network-internal }}"
+          subnetwork: "{{ mf2_subnet_management }}"
+        - network: "{{ mf2_network_internal }}"
           access_configs:
           - name: External NAT
             type: ONE_TO_ONE_NAT
-          subnetwork: "{{ mf2-subnet-internal }}"
+          subnetwork: "{{ mf2_subnet_internal }}"
         zone: "{{ zone }}"
         project: "{{ project }}"
         auth_kind: serviceaccount
