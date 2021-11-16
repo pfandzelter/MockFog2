@@ -92,6 +92,7 @@ agent_port: ${aws.agent_port}
     return `---
 project: ${gcloud.project}
 region: ${gcloud.region}
+zone: ${gcloud.zone}
 gcp_cred_file: ${gcloud.gcp_cred_file}
 agent_port: ${gcloud.agent_port}
 \n`
@@ -295,8 +296,6 @@ module.exports = function(fileLocation) {
     }
 
     const infraJson = fs.readFileSync(fileLocation, "utf-8")
-    console.log(infraJson)
-
     const stripped = stripJson(infraJson)
     try {
         var infra = JSON.parse(stripped)

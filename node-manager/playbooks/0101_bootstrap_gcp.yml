@@ -3,6 +3,10 @@
 - name: Boostrap MockFog2 Infrastructure on GCP
   hosts: localhost
 
+  vars:
+    app_ports: "{{ application_instruction_and_states_ports }}"
+    app_ports_string_list: "{{ app_ports | map('string') | list }}"
+
   tasks:
     - name: Create Management Network
       google.cloud.gcp_compute_network:
@@ -32,9 +36,9 @@
         allowed:
         - ip_protocol: tcp
           ports:
-          - 22
-          - "{{ agent_port }}"
-          - "{{ application_instruction_and_states_ports }} "
+          - "22"
+          - "{{ agent_port | string }}"
+          - "{{ item }}"
         - ip_protocol: icmp
         source_ranges:
           - 0.0.0.0/0
@@ -42,6 +46,7 @@
         auth_kind: serviceaccount
         service_account_file: "{{ gcp_cred_file }}"
         state: present
+      with_items: "{{ app_ports_string_list }}"
 
     - name: Create Internal Network
       google.cloud.gcp_compute_network:
@@ -86,7 +91,7 @@
         - auto_delete: 'true'
           boot: 'true'
           initialize_params:
-            source_image: "{{ image }}"
+            source_image: "{{ item.image }}"
         labels:
           environment: mf2
         network_interfaces:
