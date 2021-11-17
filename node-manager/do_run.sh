@@ -2,7 +2,6 @@
 
 node app.js bootstrap
 node app.js agent
-node app.js agent
 node app.js manipulate
 node app.js prepare
 node app.js start

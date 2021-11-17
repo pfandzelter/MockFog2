@@ -72,7 +72,7 @@
 
     - name: Create Internal Firewall
       google.cloud.gcp_compute_firewall:
-        name: mf2-firewall-management
+        name: mf2-firewall-internal
         allowed:
         - ip_protocol: tcp
         - ip_protocol: icmp
@@ -111,3 +111,40 @@
         service_account_file: "{{ gcp_cred_file }}"
         state: present
       with_items: "{{ machines }}"
+      register: gcp_instances
+
+    - name: Print GCP instances
+      ansible.builtin.debug:
+        msg: "{{ gcp_instances.results[0].networkInterfaces[0].accessConfigs[0].natIP }}"
+
+    # Check how to create a vector of IPs from that dictionary
+    # - name: Create a vector of network interfaces
+    #   set_fact:
+    #     network_interfaces: gcp_instances.results[0].networkInterfaces }}"
+
+    # - name: Wait for the instances to be created
+    #   wait_for: host={{ item.accessConfigs[0].natIP }} port=22 delay=10 timeout=60
+    #   with_items: "{{ network_interfaces }}"
+
+    - name: Collect instance metadata
+      gcp_compute_instance_info:
+        zone: "{{ zone }}"
+        filters:
+        - name = "{{ item.machine_name }}"
+        project: "{{ project }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ gcp_cred_file }}"
+      with_items: "{{ machines }}"
+      register: gcp_instances # overwrite previous var
+
+    # - name: Print GCP instances
+    #   ansible.builtin.debug:
+    #     msg: "{{ gcp_instances }}"
+
+    - name: Write instance metadata to file
+      local_action:
+        module: copy
+        dest: "{{ playbook_dir }}/../run/machines/machine_meta.jsonc"
+        content: "{{ gcp_instances }}"
+        mode: "400"
+    

@@ -26,7 +26,7 @@ class Child extends Phase {
 
     async runPrePlaybookTasks() {
         // write var file
-        await fsp.writeFile(this.varPath, this.infra.awsYML)
+        await fsp.writeFile(this.varPath, this.infra.gcloudYML)
         this.logger.info("Agent playbook vars written to " + this.varPath)
 
         // write netplan file

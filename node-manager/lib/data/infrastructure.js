@@ -305,9 +305,6 @@ module.exports = function(fileLocation) {
         process.exit(1)
     }
 
-    console.log(getGcloudYml(infra.gcp))
-    console.log(getMachinesGcloudYml(infra.machines, infra.gcp))
-
     return {
         infra: infra,
         graph: getGraph(infra),

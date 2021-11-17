@@ -14,8 +14,8 @@ class Child extends Phase {
     constructor(phaseName) {
         super(phaseName)
 
-        this.varPath = conf.runPlaybookVarDir + "0104_destroy.yml"
-        this.playbookPath = conf.playbookDir + "0104_destroy.yml"
+        this.varPath = conf.runPlaybookVarDir + "0104_destroy_gcp.yml"
+        this.playbookPath = conf.playbookDir + "0104_destroy_gcp.yml"
         this.playbookLogPath = conf.runLogDir + "0104_destroy-playlog.log"
     }
 
@@ -25,7 +25,7 @@ class Child extends Phase {
 
     async runPrePlaybookTasks() {
         // write var file
-        await fsp.writeFile(this.varPath, this.infra.awsYML)
+        await fsp.writeFile(this.varPath, this.infra.gcloudYML + this.infra.machinesYML)
         this.logger.info("Destroy playbook vars written to " + this.varPath)
 
         // create playbook object

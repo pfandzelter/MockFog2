@@ -1,0 +1,68 @@
+- name: Destroy MockFog2 Infrastructure
+  hosts: localhost
+
+  tasks:
+    - name: Destroy Compute Instance
+      gcp_compute_instance:
+        state: absent
+        name: "{{ item.machine_name }}"
+        zone: "{{ zone }}"
+        project: "{{ project }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ gcp_cred_file }}"
+      with_items: "{{ machines }}"
+
+    - name: Destroy Internal Firewall
+      google.cloud.gcp_compute_firewall:
+        name: mf2-firewall-internal
+        project: "{{ project }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ gcp_cred_file }}"
+        state: absent
+
+    - name: Destroy Internal Subnet
+      google.cloud.gcp_compute_subnetwork:
+        name: mf2-subnet-internal
+        region: "{{ region }}"
+        project: "{{ project }}"
+        network: 
+        ip_cidr_range: 10.0.2.0/24
+        auth_kind: serviceaccount
+        service_account_file: "{{ gcp_cred_file }}"
+        state: absent
+
+    - name: Destroy Internal Network
+      google.cloud.gcp_compute_network:
+        name: mf2-network-internal
+        project: "{{ project }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ gcp_cred_file }}"
+        state: absent
+
+    - name: Destroy Management Firewall
+      google.cloud.gcp_compute_firewall:
+        name: mf2-firewall-management
+        project: "{{ project }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ gcp_cred_file }}"
+        state: absent
+
+    - name: Destroy Management Subnet
+      google.cloud.gcp_compute_subnetwork:
+        name: mf2-subnet-management
+        region: "{{ region }}"
+        project: "{{ project }}"
+        network:
+        ip_cidr_range: 10.0.1.0/24
+        auth_kind: serviceaccount
+        service_account_file: "{{ gcp_cred_file }}"
+        state: absent
+    
+    - name: Destproy Management Network
+      google.cloud.gcp_compute_network:
+        name: mf2-network-management
+        auto_create_subnetworks: 'false'
+        project: "{{ project }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ gcp_cred_file }}"
+        state: absent
