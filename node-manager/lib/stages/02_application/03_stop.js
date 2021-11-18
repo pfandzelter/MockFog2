@@ -24,11 +24,11 @@ class Child extends Phase {
 
     async runPrePlaybookTasks() {
         // write var file
-        await fsp.writeFile(this.varPath, this.infra.awsYML)
+        await fsp.writeFile(this.varPath, this.infra.gcloudYML)
         this.logger.info("Stop playbook vars written to " + this.varPath)
 
         // create playbook object
-        this.playbook = new common.Playbook(this.playbookPath, this.varPath, ["-i", `${conf.runDir}hosts`, `--key-file=${conf.runDir}${this.infra.infra.aws.ssh_key_name}.pem`])
+        this.playbook = new common.Playbook(this.playbookPath, this.varPath, ["-i", `${conf.runDir}hosts`])
     }
 
 }

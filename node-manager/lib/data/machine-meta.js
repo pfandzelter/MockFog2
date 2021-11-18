@@ -113,8 +113,7 @@ function getNetplanString(machine_name, instances) {
  */
 function getHostsDataObject(machineMeta) {
     return {
-        "machines:children": machineMeta.instances.
-        map(i => {return i.tags.Name}).join("\n"),
+        "machines:children": machineMeta.instances.map(i => {return i.tags.Name}).join("\n"),
         "machineGroups": machineMeta.instances.map(i => {
             return `[${i.tags.Name}]\n${i.public_dns_name} machine_name=${i.tags.Name} internal_ip=${getInternalIP(i.tags.Name, machineMeta.instances)}`
         }).join("\n\n")
