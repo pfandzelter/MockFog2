@@ -130,11 +130,9 @@
       gcp_compute_instance_info:
         zone: "{{ zone }}"
         filters:
-        - name = "{{ item.machine_name }}"
         project: "{{ project }}"
         auth_kind: serviceaccount
         service_account_file: "{{ gcp_cred_file }}"
-      with_items: "{{ machines }}"
       register: gcp_instances # overwrite previous var
 
     # - name: Print GCP instances
