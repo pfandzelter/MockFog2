@@ -33,12 +33,13 @@
     - name: Create Management Firewall
       google.cloud.gcp_compute_firewall:
         name: mf2-firewall-management
+        network: "{{ mf2_network_management }}"
         allowed:
         - ip_protocol: tcp
           ports:
           - "22"
           - "{{ agent_port | string }}"
-          - "{{ item }}"
+          - "8080"
         - ip_protocol: icmp
         source_ranges:
           - 0.0.0.0/0
@@ -46,7 +47,7 @@
         auth_kind: serviceaccount
         service_account_file: "{{ gcp_cred_file }}"
         state: present
-      with_items: "{{ app_ports_string_list }}"
+      # with_items: "{{ app_ports_string_list }}"
 
     - name: Create Internal Network
       google.cloud.gcp_compute_network:
@@ -73,6 +74,7 @@
     - name: Create Internal Firewall
       google.cloud.gcp_compute_firewall:
         name: mf2-firewall-internal
+        network: "{{ mf2_network_internal }}"
         allowed:
         - ip_protocol: tcp
         - ip_protocol: icmp
@@ -141,8 +143,7 @@
 
     - name: Write instance metadata to file
       local_action:
-        module: copy
+        module: copy 
         dest: "{{ playbook_dir }}/../run/machines/machine_meta.jsonc"
         content: "{{ gcp_instances }}"
         mode: "400"
-    
