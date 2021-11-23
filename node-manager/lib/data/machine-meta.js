@@ -50,7 +50,7 @@ const conf = require("../config.js")
     for (const network_interface of network_interfaces) {
         const ip = network_interface.networkIP
         if (ip.startsWith("10.0.1.")) {
-            return accessConfig.natIP
+            return network_interface.accessConfigs[0].natIP
         }
     }
 }
@@ -64,8 +64,8 @@ const conf = require("../config.js")
  */
  function getMachineNameFromPublicIp(public_ip, instances) {
     for (const instance of instances) {
-        if (instance.networkInterfaces[0].accessConfig.natIP === public_ip ||
-            instance.networkInterfaces[1].accessConfig.natIP === public_ip) {
+        if (instance.networkInterfaces[0].accessConfigs[0].natIP === public_ip ||
+            instance.networkInterfaces[1].accessConfigs[0].natIP === public_ip) {
             return instance.name
         }
     }
@@ -116,38 +116,20 @@ function getNetplanStringAWS(machine_name, instances) {
  * @param {Object} instances the machine meta json instances object
  */
 
- function getNetplanString(machine_name, instances) {
-    // mac addresses
+ function getNetplanString(machine_name) {
+    // get mac addresses
     const addresses = {}
+    
+    fileLocation = conf.runConfigDir + "mac_addrs.json"
+    const infraJson = fs.readFileSync(fileLocation, "utf-8")
+    const stripped = stripJson(infraJson)
+    
+    try {
+        var vm_macs = JSON.parse(stripped)
 
-    const { exec } = require('child_process');
-    const cmd = "gcloud compute ssh server1 --command='find /sys/class/net/ -type l \
-     -printf \"%P: \" -execdir cat {}/address \;'"
-    const executeCommand = (cmd, successCallback, errorCallback) => {
-        exec(cmd, (error, stdout, stderr) => {
-            if (error) {
-                // console.log(`error: ${error.message}`);
-                if (errorCallback) {
-                    errorCallback(error.message);
-                }
-                return;
-            }
-            if (stderr) {
-                //console.log(`stderr: ${stderr}`);
-                if (errorCallback) {
-                    errorCallback(stderr);
-                }
-                return;
-            }
-            //console.log(`stdout: ${stdout}`);
-            if (successCallback) {
-                // Parse 
-                // ens5: 42:01:0a:00:02:02
-                // lo: 00:00:00:00:00:00
-                // ens4: 42:01:0a:00:01:02
-                console.log(stdout)
-                console.log("HELLO")
-                var arr = stdout.split("\r\n");
+        for (const vm of vm_macs.mac_addrs) {
+            if (vm.name === machine_name) {
+                var arr = vm.macs.split("\r\n");
                 for (var i = 0; i < arr.length; i++) {
                     var line = arr[i].split(" ")
                     if (line[0].includes("ens5")) {
@@ -158,28 +140,33 @@ function getNetplanStringAWS(machine_name, instances) {
                         console.log(addresses["management"] = line[1])
                     }
                 }
+                break
             }
-        });
-    };
+        }
 
-    console.log("ADRESSES", addresses)
+        console.log("ADRESSES", addresses)
 
-    return `network:
-    ethernets:
-        ens5:
-            dhcp4: true
-            dhcp6: false
-            match:
-                macaddress: ${addresses["management"]}
-            set-name: ens5
-        ens6:
-            dhcp4: true
-            dhcp6: false
-            match:
-                macaddress: ${addresses["internal"]}
-            set-name: ens6
-    version: 2
-`
+        return `network:
+        ethernets:
+            ens5:
+                dhcp4: true
+                dhcp6: false
+                match:
+                    macaddress: ${addresses["management"]}
+                set-name: ens5
+            ens6:
+                dhcp4: true
+                dhcp6: false
+                match:
+                    macaddress: ${addresses["internal"]}
+                set-name: ens6
+        version: 2
+        `
+    } catch (error) {
+        logger.error(error)
+        logger.error(stripped)
+        process.exit(1)
+    }
 }
 
 
@@ -192,25 +179,11 @@ function getNetplanStringAWS(machine_name, instances) {
  *
  * @param {Object} machineMeta the machine meta json object
  */
-function getHostsDataObject(machineMeta) {
-    return {
-        "machines:children": machineMeta.instances.map(i => {return i.tags.Name}).join("\n"),
-        "machineGroups": machineMeta.instances.map(i => {
-            return `[${i.tags.Name}]\n${i.public_dns_name} machine_name=${i.tags.Name} internal_ip=${getInternalIP(i.tags.Name, machineMeta.instances)}`
-        }).join("\n\n")
-    }
-}
-
-/**
- * Returns a helper object needed to create the ansible hosts file.
- *
- * @param {Object} machineMeta the machine meta json object
- */
  function getHostsDataObject(machineMeta) {
     return {
         "machines:children": machineMeta.resources.map(i => {return i.name}).join("\n"),
-        "machineGroups": machineMeta.instances.map(i => {
-            return `[${i.name}]\n${i.public_dns_name} machine_name=${i.tags.Name} internal_ip=${getInternalIP(i.tags.Name, machineMeta.instances)}`
+        "machineGroups": machineMeta.resources.map(i => {
+            return `[${i.name}]\n${i.networkInterfaces[0].accessConfigs[0].natIP} machine_name=${i.name} internal_ip=${getInternalIP(i.name, machineMeta.resources)}`
         }).join("\n\n")
     }
 }
@@ -226,16 +199,16 @@ module.exports = function(fileLocation) {
     return {
         machineMeta: machineMeta,
         getInternalIP: function(machine_name) {
-            return getInternalIP(machine_name, machineMeta.instances)
+            return getInternalIP(machine_name, machineMeta.resources)
         },
         getPublicIP: function(machine_name) {
-            return getPublicIP(machine_name, machineMeta.instances)
+            return getPublicIP(machine_name, machineMeta.resources)
         },
         getMachineNameFromPublicIp: function(public_ip) {
-            return getMachineNameFromPublicIp(public_ip, machineMeta.instances)
+            return getMachineNameFromPublicIp(public_ip, machineMeta.resources)
         },
         getNetplanString: function(machine_name) {
-            return getNetplanString(machine_name, machineMeta.instances)
+            return getNetplanString(machine_name, machineMeta.resources)
         },
         hostsDataObject: getHostsDataObject(machineMeta)
     }
